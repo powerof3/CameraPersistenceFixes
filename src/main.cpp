@@ -94,11 +94,12 @@ void InitializeLog()
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
+
 	InitializeLog();
 
-	logger::info("Game version : {}", a_skse->RuntimeVersion().string());
+	logger::info("Game version : {}", a_skse->RuntimeVersion());
 
-	SKSE::Init(a_skse);
+	SKSE::Init(a_skse, false);
 
 	auto messaging = SKSE::GetMessagingInterface();
 	messaging->RegisterListener("SKSE", OnInit);

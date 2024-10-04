@@ -93,8 +93,8 @@ namespace Camera
 	}
 
 	std::optional<std::filesystem::path> Serializer::save_directory()
-	{
-		wchar_t*                                               buffer{ nullptr };
+	{	
+			wchar_t*                                               buffer{ nullptr };
 		const auto                                             result = ::SHGetKnownFolderPath(::FOLDERID_Documents, ::KNOWN_FOLDER_FLAG::KF_FLAG_DEFAULT, nullptr, std::addressof(buffer));
 		std::unique_ptr<wchar_t[], decltype(&::CoTaskMemFree)> knownPath(buffer, ::CoTaskMemFree);
 		if (!knownPath || result != S_OK) {
@@ -104,7 +104,11 @@ namespace Camera
 
 		std::filesystem::path path = knownPath.get();
 		path /= "My Games"sv;
-		path /= *REL::Relocation<const char**>(RELOCATION_ID(508778, 380738)).get();
+		if (::GetModuleHandle(TEXT("Galaxy64"))) {
+			path /= "Skyrim Special Edition GOG"sv;
+		} else {
+			path /= "Skyrim Special Edition"sv;
+		}
 
 		if (const auto sLocalSavePath = RE::GetINISetting("sLocalSavePath:General"))
 			path /= sLocalSavePath->GetString();
@@ -126,7 +130,7 @@ namespace Camera
 			}
 		}
 
-        [[maybe_unused]] auto ec = glz::write_file(cameraDataMap, jsonPath, std::string());
+        [[maybe_unused]] auto ec = glz::write_file_json(cameraDataMap, jsonPath, std::string());
 	}
 
 	void Serializer::LoadCameraData()
@@ -137,6 +141,10 @@ namespace Camera
 			}
 		}
 
-		glz::read_file(cameraDataMap, jsonPath, std::string());
+		std::string           buffer{};
+		[[maybe_unused]] auto ec = glz::read_file_json(cameraDataMap, jsonPath, buffer);
+		if (ec) {
+			logger::info("Error when loading: {}", glz::format_error(ec, buffer));
+		}
 	}
 }

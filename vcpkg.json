@@ -12,5 +12,6 @@
     "spdlog",
     "unordered-dense",
     "xbyak"
-   ]
+  ],
+  "builtin-baseline": "52fc0d8c1e2cbd12c9907284566f5c17e5ef0d12"
 }
