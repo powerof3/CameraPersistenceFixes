@@ -13,8 +13,6 @@
 
 #undef ERROR
 
-#define DLLEXPORT __declspec(dllexport)
-
 using namespace std::literals;
 
 template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>

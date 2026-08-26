@@ -84,7 +84,9 @@ namespace Camera
 
 	private:
 		static std::optional<std::filesystem::path> save_directory();
-		void                                        SerializeCameraData();
+		void                                        init_save_directory();
+
+		void SerializeCameraData();
 
 		// members
 		std::string currentSave{};
@@ -92,6 +94,6 @@ namespace Camera
 		Map<std::string, CameraData>      cameraDataMap{};
 		Map<std::uint32_t, std::uint32_t> modIndexMap{};
 
-		std::string jsonPath{};
+		std::filesystem::path jsonPath{};
 	};
 }

@@ -112,27 +112,29 @@ namespace Camera
 		return path;
 	}
 
-	void Serializer::SerializeCameraData()
+	void Serializer::init_save_directory()
 	{
 		if (jsonPath.empty()) {
 			if (const auto saveDirectory = save_directory()) {
-				jsonPath = saveDirectory->string();
+				jsonPath = *saveDirectory;
+				REX::INFO("Filepath: {}", jsonPath.string());
 			}
 		}
+	}
 
-		[[maybe_unused]] auto ec = glz::write_file_json(cameraDataMap, jsonPath, std::string());
+	void Serializer::SerializeCameraData()
+	{
+		init_save_directory();
+
+		[[maybe_unused]] auto ec = glz::write_file_json(cameraDataMap, jsonPath.string(), std::string());
 	}
 
 	void Serializer::LoadCameraData()
 	{
-		if (jsonPath.empty()) {
-			if (const auto saveDirectory = save_directory()) {
-				jsonPath = saveDirectory->string();
-			}
-		}
+		init_save_directory();
 
 		std::string           buffer{};
-		[[maybe_unused]] auto ec = glz::read_file_json(cameraDataMap, jsonPath, buffer);
+		[[maybe_unused]] auto ec = glz::read_file_json(cameraDataMap, jsonPath.string(), buffer);
 		if (ec) {
 			REX::WARN("Error when loading: {}", glz::format_error(ec, buffer));
 		}
