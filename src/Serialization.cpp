@@ -35,12 +35,12 @@ namespace Camera
 
 	CameraData::CameraData(const RE::PlayerCamera* a_playerCamera, const RE::FreeCameraState* a_state)
 	{
-        const auto currentCamera = a_playerCamera->currentState->id;
+		const auto currentCamera = a_playerCamera->currentState->id;
 		if (currentCamera == RE::CameraState::kFree) {
 			freeCameraState = a_state;
 		}
 		if (currentCamera != RE::CameraState::kMount && currentCamera != RE::CameraState::kDragon) {
-            if (const auto target = a_playerCamera->cameraTarget.get(); target && !target->IsPlayerRef()) {
+			if (const auto target = a_playerCamera->cameraTarget.get(); target && !target->IsPlayerRef()) {
 				RE::BGSNumericIDIndex numericID{};
 				numericID.SetNumericID(target->GetFormID());
 				cameraTargetHandle = numericID;
@@ -55,19 +55,18 @@ namespace Camera
 		}
 
 		if (cameraTargetHandle) {
-            if (const auto actor = RE::TESForm::LookupByID<RE::Actor>(cameraTargetHandle->GetNumericID())) {
+			if (const auto actor = RE::TESForm::LookupByID<RE::Actor>(cameraTargetHandle->GetNumericID())) {
 				RE::PlayerCamera::GetSingleton()->cameraTarget = actor->CreateRefHandle();
 			}
 		}
 	}
 
-    bool CameraData::DoSerialize() const
+	bool CameraData::DoSerialize() const
 	{
 		return freeCameraState || cameraTargetHandle;
 	}
 
-
-    void Serializer::SetCurrentSavePath(const std::string& a_save)
+	void Serializer::SetCurrentSavePath(const std::string& a_save)
 	{
 		currentSave = a_save;
 	}
@@ -93,31 +92,22 @@ namespace Camera
 	}
 
 	std::optional<std::filesystem::path> Serializer::save_directory()
-	{	
-			wchar_t*                                               buffer{ nullptr };
-		const auto                                             result = ::SHGetKnownFolderPath(::FOLDERID_Documents, ::KNOWN_FOLDER_FLAG::KF_FLAG_DEFAULT, nullptr, std::addressof(buffer));
-		std::unique_ptr<wchar_t[], decltype(&::CoTaskMemFree)> knownPath(buffer, ::CoTaskMemFree);
-		if (!knownPath || result != S_OK) {
-			logger::error("failed to get known folder path"sv);
-			return std::nullopt;
-		}
+	{
+		std::optional<std::filesystem::path> path;
 
-		std::filesystem::path path = knownPath.get();
-		path /= "My Games"sv;
-		if (::GetModuleHandle(TEXT("Galaxy64"))) {
-			path /= "Skyrim Special Edition GOG"sv;
-		} else {
-			path /= "Skyrim Special Edition"sv;
-		}
+		if (auto loggerDirectory = SKSE::log::log_directory()) {
+			path = loggerDirectory->parent_path();
 
-		if (const auto sLocalSavePath = RE::GetINISetting("sLocalSavePath:General"))
-			path /= sLocalSavePath->GetString();
-		else {
-			logger::error("failed to get local save path ini setting"sv);
-			return std::nullopt;
-		}
+			if (const auto sLocalSavePath = RE::GetINISetting("sLocalSavePath:General")) {
+				auto loc = std::filesystem::path{ sLocalSavePath->GetString() };
+				path = loc.is_absolute() ? loc : *path / loc;
+			} else {
+				REX::ERROR("failed to get local save path ini setting"sv);
+				return std::nullopt;
+			}
 
-		path /= "CameraSaveData.json"sv;
+			*path /= "CameraSaveData.json"sv;
+		}
 
 		return path;
 	}
@@ -130,7 +120,7 @@ namespace Camera
 			}
 		}
 
-        [[maybe_unused]] auto ec = glz::write_file_json(cameraDataMap, jsonPath, std::string());
+		[[maybe_unused]] auto ec = glz::write_file_json(cameraDataMap, jsonPath, std::string());
 	}
 
 	void Serializer::LoadCameraData()
@@ -144,7 +134,7 @@ namespace Camera
 		std::string           buffer{};
 		[[maybe_unused]] auto ec = glz::read_file_json(cameraDataMap, jsonPath, buffer);
 		if (ec) {
-			logger::info("Error when loading: {}", glz::format_error(ec, buffer));
+			REX::WARN("Error when loading: {}", glz::format_error(ec, buffer));
 		}
 	}
 }

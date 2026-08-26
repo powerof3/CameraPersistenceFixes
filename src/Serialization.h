@@ -71,7 +71,7 @@ namespace Camera
 		};
 	};
 
-	class Serializer : public ISingleton<Serializer>
+	class Serializer : public REX::TSingleton<Serializer>
 	{
 	public:
 		void SetCurrentSavePath(const std::string& a_save);
@@ -89,8 +89,8 @@ namespace Camera
 		// members
 		std::string currentSave{};
 
-		ankerl::unordered_dense::map<std::string, CameraData>      cameraDataMap{};
-		ankerl::unordered_dense::map<std::uint32_t, std::uint32_t> modIndexMap{};
+		Map<std::string, CameraData>      cameraDataMap{};
+		Map<std::uint32_t, std::uint32_t> modIndexMap{};
 
 		std::string jsonPath{};
 	};

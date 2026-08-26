@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 set(NAME "po3_CameraPersistenceFixes" CACHE STRING "")
-set(VERSION 1.1.0 CACHE STRING "")
+set(VERSION 1.2.0 CACHE STRING "")
 set(AE_VERSION 1)
 
 # ---- Options ----
@@ -20,7 +20,7 @@ macro(find_commonlib_path)
 	if (CommonLibName AND NOT ${CommonLibName} STREQUAL "")
 		# Check extern
 		find_path(CommonLibPath
-		include/REL/Relocation.h
+		include/RE/Skyrim.h
 		PATHS extern/${CommonLibName})
 		if (${CommonLibPath} STREQUAL "CommonLibPath-NOTFOUND")
 			#Check path
@@ -61,6 +61,26 @@ else ()
 	)
 endif ()
 
+set(VCPKG_OVERLAY_PORTS "")
+
+if(DEFINED ENV{CommonLibSSEPath})
+	file(TO_CMAKE_PATH "$ENV{CommonLibSSEPath}" CLIB_SOURCE_DIR)
+endif()
+
+if(CLIB_SOURCE_DIR AND EXISTS "${CLIB_SOURCE_DIR}/cmake/ports/commonlib-shared/portfile.cmake")
+	list(APPEND VCPKG_OVERLAY_PORTS "${CLIB_SOURCE_DIR}/cmake/ports")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/CommonLibSSE/cmake/ports/commonlib-shared/portfile.cmake")
+	list(APPEND VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/CommonLibSSE/cmake/ports")
+else()
+	message(FATAL_ERROR "commonlib-shared overlay port not found in any CommonLibSSE checkout")
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ports")
+	list(APPEND VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ports")
+endif()
+
+message(STATUS "vcpkg overlay ports: ${VCPKG_OVERLAY_PORTS}")
+
 set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "")
 
@@ -94,9 +114,7 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 find_package(glaze CONFIG REQUIRED)
-find_package(unordered_dense CONFIG REQUIRED)
-
-find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/bitmasks.hpp")
+find_package(boost_unordered CONFIG REQUIRED)
 
 # ---- Globals ----
 
@@ -178,15 +196,14 @@ target_include_directories(
 	PRIVATE
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}/src
-		${CLIB_UTIL_INCLUDE_DIRS}
 )
 
 target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		${CommonLibName}::${CommonLibName}
+		Boost::unordered
 		glaze::glaze
-		unordered_dense::unordered_dense
 )
 
 target_precompile_headers(
